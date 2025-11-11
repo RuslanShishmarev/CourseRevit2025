@@ -1,0 +1,40 @@
+﻿<UserControl
+    x:Class="CourseRevit2025.FirstProject.View.Controls.TableElementsControl"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:local="clr-namespace:CourseRevit2025.FirstProject.View"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:models="clr-namespace:CourseRevit2025.FirstProject.Models"
+    d:DesignHeight="400"
+    d:DesignWidth="400"
+    mc:Ignorable="d">
+    <UserControl.Resources>
+        <ResourceDictionary Source="/CourseRevit2025.FirstProject;component/Resources/MainStyle.xaml" />
+    </UserControl.Resources>
+    <ListView
+        Grid.Row="1"
+        local:ListViewHelper.SelectedItems="{Binding SelectedElements}"
+        ItemsSource="{Binding Elements}"
+        SelectionMode="Multiple"
+        Style="{StaticResource RevitListView}">
+        <ListView.ContextMenu>
+            <ContextMenu>
+                <MenuItem Command="{Binding SelectElementCommand}" Header="Select element" />
+                <MenuItem Command="{Binding IsolateElementsCommand}" Header="Isolate elements" />
+            </ContextMenu>
+        </ListView.ContextMenu>
+        <ListView.View>
+            <GridView>
+                <GridViewColumn
+                    Width="50"
+                    DisplayMemberBinding="{Binding Path=Value.Id}"
+                    Header="Id" />
+                <GridViewColumn
+                    Width="200"
+                    DisplayMemberBinding="{Binding Path=Name}"
+                    Header="Name" />
+            </GridView>
+        </ListView.View>
+    </ListView>
+</UserControl>
