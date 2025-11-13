@@ -53,4 +53,16 @@ internal static class CommonViewService
 
         return bitmapimage;
     }
+
+    public static string GetValueFromUser(string title, string text)
+    {
+        GetValueFromUserView view = new(title: title, text: text);
+        view.ShowDialog();
+
+        if (view.IsValid)
+        {
+            return view.Value;
+        }
+        return string.Empty;
+    }
 }

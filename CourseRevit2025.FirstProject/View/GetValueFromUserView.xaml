@@ -1,0 +1,35 @@
+﻿<Window
+    x:Class="CourseRevit2025.FirstProject.View.GetValueFromUserView"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:local="clr-namespace:CourseRevit2025.FirstProject.View"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    Width="200"
+    Height="150"
+    WindowStartupLocation="CenterScreen"
+    mc:Ignorable="d">
+    <Window.Resources>
+        <ResourceDictionary Source="/CourseRevit2025.FirstProject;component/Resources/MainStyle.xaml" />
+    </Window.Resources>
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition />
+            <RowDefinition />
+            <RowDefinition />
+        </Grid.RowDefinitions>
+        <TextBlock
+            x:Name="textView"
+            HorizontalAlignment="Center"
+            VerticalAlignment="Center" />
+        <TextBox
+            x:Name="valueTB"
+            Grid.Row="1"
+            HorizontalContentAlignment="Center" />
+        <Button
+            Grid.Row="2"
+            Click="Button_Click"
+            Content="Ok"
+            Style="{StaticResource RevitButton}" />
+    </Grid>
+</Window>

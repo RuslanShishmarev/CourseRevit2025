@@ -19,60 +19,13 @@
             <RowDefinition />
         </Grid.RowDefinitions>
 
-        <Grid Grid.Row="0">
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition />
-                <ColumnDefinition />
-                <ColumnDefinition />
-            </Grid.ColumnDefinitions>
+        <ComboBox
+            DisplayMemberPath="Name"
+            ItemsSource="{Binding SearchCategories}"
+            SelectedItem="{Binding SelectedCategory}"
+            Style="{StaticResource RevitComboBox}" />
 
-            <ComboBox
-                DisplayMemberPath="Name"
-                Style="{StaticResource RevitComboBox}"
-                ItemsSource="{Binding SearchCategories}"
-                SelectedItem="{Binding SelectedCategory}" />
-            <CheckBox
-                Style="{StaticResource RevitCheckBox}"
-                Grid.Column="1"
-                Content="Inner view"
-                IsChecked="{Binding InnerView}" />
-            <ComboBox
-                Style="{StaticResource RevitComboBox}"
-                Grid.Column="2"
-                DisplayMemberPath="Name"
-                ItemsSource="{Binding ViewListModes}"
-                SelectedItem="{Binding SelectedViewMode}" />
-        </Grid>
-
-        <controls:BlocksElementsControl Grid.Row="1" DataContext="{Binding}">
-            <controls:BlocksElementsControl.Style>
-                <Style TargetType="UserControl">
-                    <Style.Triggers>
-                        <DataTrigger Binding="{Binding SelectedViewMode.Value}" Value="{x:Static models:ViewModeType.Table}">
-                            <Setter Property="Visibility" Value="Collapsed" />
-                        </DataTrigger>
-                        <DataTrigger Binding="{Binding SelectedViewMode.Value}" Value="{x:Static models:ViewModeType.Blocks}">
-                            <Setter Property="Visibility" Value="Visible" />
-                        </DataTrigger>
-                    </Style.Triggers>
-                </Style>
-            </controls:BlocksElementsControl.Style>
-        </controls:BlocksElementsControl>
-
-        <controls:TableElementsControl Grid.Row="1" DataContext="{Binding}">
-            <controls:TableElementsControl.Style>
-                <Style TargetType="UserControl">
-                    <Style.Triggers>
-                        <DataTrigger Binding="{Binding SelectedViewMode.Value}" Value="{x:Static models:ViewModeType.Table}">
-                            <Setter Property="Visibility" Value="Visible" />
-                        </DataTrigger>
-                        <DataTrigger Binding="{Binding SelectedViewMode.Value}" Value="{x:Static models:ViewModeType.Blocks}">
-                            <Setter Property="Visibility" Value="Collapsed" />
-                        </DataTrigger>
-                    </Style.Triggers>
-                </Style>
-            </controls:TableElementsControl.Style>
-        </controls:TableElementsControl>
+        <controls:ShowElementsView Grid.Row="1" DataContext="{Binding}" />
 
     </Grid>
 
