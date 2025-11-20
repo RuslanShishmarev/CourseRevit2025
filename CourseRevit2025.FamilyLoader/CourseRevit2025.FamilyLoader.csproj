@@ -1,0 +1,29 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <None Remove="Families\KMP_B_С-образный профиль.rfa" />
+    <None Remove="Families\KMP_Equipment_Simple.rfa" />
+    <None Remove="Families\KMP_R_Стойка фальшпола двойная_2SFR41.rfa" />
+    <None Remove="Families\KMP_R_Стойка фальшпола_SFR41.rfa" />
+    <None Remove="Families\KMP_R_Стойка фальшпола_SFR72.rfa" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Include="Families\KMP_B_С-образный профиль.rfa" />
+    <EmbeddedResource Include="Families\KMP_Equipment_Simple.rfa" />
+    <EmbeddedResource Include="Families\KMP_R_Стойка фальшпола двойная_2SFR41.rfa" />
+    <EmbeddedResource Include="Families\KMP_R_Стойка фальшпола_SFR41.rfa" />
+    <EmbeddedResource Include="Families\KMP_R_Стойка фальшпола_SFR72.rfa" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Revit_All_Main_Versions_API_x64" Version="2025.0.0" />
+  </ItemGroup>
+
+</Project>
