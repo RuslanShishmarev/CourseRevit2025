@@ -11,6 +11,38 @@ internal class ElementService
         _doc = doc;
     }
 
+    public IList<Level> GetLevels()
+    {
+        return new FilteredElementCollector(_doc)
+            .OfClass(typeof(Level))
+            .Cast<Level>()
+            .ToList();
+    }
+
+    public bool TryInvokeInnerTransaction(
+        Action action,
+        string trName,
+        out Exception? innerExeption)
+    {
+        innerExeption = null;
+
+        using var tr = new Transaction(_doc, trName);
+        tr.Start();
+
+        try
+        {
+            action();
+            tr.Commit();
+            return true;
+        }
+        catch (Exception ex)
+        {
+            tr.RollBack();
+            innerExeption = ex;
+            return false;
+        }
+    }
+
     public IList<Element> GetElementsByParameter(
         BuiltInCategory category,
         BuiltInParameter parameter,
