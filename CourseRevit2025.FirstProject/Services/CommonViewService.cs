@@ -65,4 +65,20 @@ internal static class CommonViewService
         }
         return string.Empty;
     }
+
+    public static bool TryGetValueFromUser(string title, string text, out double value)
+    {
+        GetValueFromUserView view = new(title: title, text: text);
+        view.ShowDialog();
+        value = 0;
+
+        if (view.IsValid)
+        {
+            if (double.TryParse(view.Value, out value))
+            {
+                return true;
+            }
+        }
+        return false;
+    }
 }

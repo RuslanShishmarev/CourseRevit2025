@@ -50,4 +50,47 @@ internal class ElementService
 
         return elements;
     }
+
+    public IList<Curve> GetCurvesFromWindow(
+        FamilyInstance wnd,
+        double offsetWidth,
+        double offsetHeight)
+    {
+        (double width, double height, XYZ center) = GetWidthHeight(wnd);
+
+        var hostLoc = ((wnd.Host as Wall).Location as LocationCurve).Curve as Line;
+
+        var widthPoint1 = center + hostLoc.Direction * (width / 2 + offsetWidth);
+        var pointTop1 = widthPoint1 + XYZ.BasisZ * (height / 2 + offsetHeight);
+        var pointBottom1 = widthPoint1 - XYZ.BasisZ * (height / 2 + offsetHeight);
+
+        var widthPoint2 = center - hostLoc.Direction * (width / 2 + offsetWidth);
+        var pointTop2 = widthPoint2 + XYZ.BasisZ * (height / 2 + offsetHeight);
+        var pointBottom2 = widthPoint2 - XYZ.BasisZ * (height / 2 + offsetHeight);
+
+        var topLine = Line.CreateBound(pointTop1, pointTop2);
+        var right = Line.CreateBound(pointTop2, pointBottom2);
+        var bottom = Line.CreateBound(pointBottom2, pointBottom1);
+        var left = Line.CreateBound(pointBottom1, pointTop1);
+
+        return [topLine, right, bottom, left];
+    }
+
+    private (double width, double height, XYZ center) GetWidthHeight(FamilyInstance element)
+    {
+        var bB = element.get_BoundingBox(null);
+
+        double height = bB.Max.Z - bB.Min.Z;
+
+        var center = (bB.Min + bB.Max) / 2;
+
+        double? width = element.Symbol.get_Parameter(BuiltInParameter.FURNITURE_WIDTH)?.AsDouble();
+
+        if (!width.HasValue)
+        {
+            width = element.Symbol.get_Parameter(BuiltInParameter.WINDOW_WIDTH)?.AsDouble();
+        }
+
+        return (width!.Value, height, center);
+    }
 }
