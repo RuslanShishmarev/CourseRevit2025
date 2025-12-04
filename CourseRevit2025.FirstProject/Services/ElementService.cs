@@ -1,14 +1,21 @@
 ﻿using Autodesk.Revit.DB;
+using Autodesk.Revit.DB.Events;
+using Autodesk.Revit.UI;
+using System.Linq;
 
 namespace CourseRevit2025.FirstProject.Services;
 
 internal class ElementService
 {
+    private ExternalCommandData _commandData;
     private Document _doc;
+    private UIDocument _uidoc;
 
-    public ElementService(Document doc)
+    public ElementService(ExternalCommandData commandData)
     {
-        _doc = doc;
+        _commandData = commandData;
+        _uidoc = _commandData.Application.ActiveUIDocument;
+        _doc = _uidoc.Document;
     }
 
     public IList<Level> GetLevels()
@@ -40,6 +47,71 @@ internal class ElementService
             tr.RollBack();
             innerExeption = ex;
             return false;
+        }
+    }
+
+    public IList<Element> GetTypes(BuiltInCategory category, string name)
+    {
+        return [.. new FilteredElementCollector(_doc)
+            .OfCategory(category)
+            .WhereElementIsElementType()
+            .Where(x => x.Name == name)];
+    }
+
+    public IList<Element> GetTypes(BuiltInCategory category)
+    {
+        var elements = new FilteredElementCollector(_doc)
+            .OfCategory(category)
+            .WhereElementIsElementType()
+            .ToElements();
+
+        return elements;
+    }
+
+    public IList<Element> GetElements(
+        BuiltInCategory category,
+        Autodesk.Revit.DB.View? view = null)
+    {
+        var elements = (view is null ? 
+            new FilteredElementCollector(_doc) : 
+            new FilteredElementCollector(_doc, view.Id))
+            .OfCategory(category)
+            .WhereElementIsNotElementType()
+            .ToElements();
+
+        return elements;
+    }
+
+    public List<Element> PlaceElementByType(FamilySymbol symbol, int? count = null)
+    {
+        _commandData.Application.Application.DocumentChanged += GetElementsFromPromt;
+
+        try
+        {
+            _uidoc.PromptForFamilyInstancePlacement(symbol);
+        }
+        catch (Autodesk.Revit.Exceptions.OperationCanceledException ex) { }
+        catch (Exception ex)
+        {
+            TaskDialog.Show("Error", ex.Message);
+        }
+
+        _commandData.Application.Application.DocumentChanged -= GetElementsFromPromt;
+        var prevousResult = newElements.Where(x => x.GetTypeId() == symbol.Id);
+        List<Element> result = count is null ? [.. prevousResult] : [.. prevousResult.Take(count.Value)];
+        newElements.Clear();
+
+        return result;
+    }
+
+    private List<Element> newElements = [];
+    private void GetElementsFromPromt(object? sender, DocumentChangedEventArgs args)
+    {
+        var newElementsIds = args.GetAddedElementIds();
+        foreach (var elId in newElementsIds)
+        {
+            Element element = _doc.GetElement(elId);
+            newElements.Add(element);
         }
     }
 

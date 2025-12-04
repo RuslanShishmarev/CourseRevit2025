@@ -17,7 +17,7 @@ internal class AreaReinforcementToVoidsCommand : IExternalCommand
     {
         UIDocument uidoc = commandData.Application.ActiveUIDocument;
         Document doc = uidoc.Document;
-        ElementService elementService = new(doc);
+        ElementService elementService = new(commandData);
 
         var windowRef = uidoc.Selection.PickObject(ObjectType.Element, new SelectWindowsFilter());
         var window = doc.GetElement(windowRef) as FamilyInstance;

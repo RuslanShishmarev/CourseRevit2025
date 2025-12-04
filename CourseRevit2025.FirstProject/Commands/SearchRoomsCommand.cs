@@ -18,7 +18,7 @@ internal class SearchRoomsCommand : IExternalCommand
         ElementSet elements)
     {
         Document doc = commandData.Application.ActiveUIDocument.Document;
-        ElementService elementService = new(doc);
+        ElementService elementService = new(commandData);
         string name = CommonViewService.GetValueFromUser("ROOMS", "Input search name");
         var searchFunc = () =>
         {

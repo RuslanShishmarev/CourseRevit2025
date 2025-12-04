@@ -18,7 +18,7 @@ internal class SearchWallsCommand : IExternalCommand
         ElementSet elements)
     {
         Document doc = commandData.Application.ActiveUIDocument.Document;
-        ElementService elementService = new(doc);
+        ElementService elementService = new(commandData);
         string heightStr = CommonViewService.GetValueFromUser("WALLS", "Input height");
 
         if(!double.TryParse(heightStr, out var height))

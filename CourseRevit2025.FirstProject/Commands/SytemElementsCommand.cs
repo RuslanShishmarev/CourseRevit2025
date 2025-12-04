@@ -21,7 +21,7 @@ internal class SytemElementsCommand : IExternalCommand
         UIDocument uidoc = commandData.Application.ActiveUIDocument;
         Document doc = uidoc.Document;
 
-        ElementService elementService = new(doc);
+        ElementService elementService = new(commandData);
 
         var ductLine = Line.CreateBound(XYZ.Zero, new XYZ(0, 3000 / Constants.UNITS_CONVERT, 0));
 

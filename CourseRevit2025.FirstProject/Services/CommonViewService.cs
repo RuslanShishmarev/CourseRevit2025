@@ -66,9 +66,13 @@ internal static class CommonViewService
         return string.Empty;
     }
 
-    public static bool TryGetValueFromUser(string title, string text, out double value)
+    public static bool TryGetValueFromUser(
+        string title,
+        string text,
+        out double value,
+        double defaultV = 0)
     {
-        GetValueFromUserView view = new(title: title, text: text);
+        GetValueFromUserView view = new(title: title, text: text, defaultValue: defaultV.ToString());
         view.ShowDialog();
         value = 0;
 
