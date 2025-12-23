@@ -12,6 +12,9 @@ namespace CourseRevit2025.FirstProject.Commands;
 [Regeneration(RegenerationOption.Manual)]
 internal class PlaceDuctCommand : IExternalCommand
 {
+    private const string PLAN_PARAMETER_NAME = "Plugin_ViewPlan";
+    private const string VIEW3D_PARAMETER_NAME = "Plugin_View3D";
+
     public Result Execute(
         ExternalCommandData commandData,
         ref string message,
@@ -21,6 +24,7 @@ internal class PlaceDuctCommand : IExternalCommand
         Document doc = uidoc.Document;
 
         ElementService elementService = new(commandData);
+        ViewPlanService viewPlanService = new(doc);
         // get all rooms inner active view (view must be plan)
 
         var rooms = elementService.GetElements(
@@ -63,6 +67,12 @@ internal class PlaceDuctCommand : IExternalCommand
             return Result.Cancelled;
         }
 
+        using TransactionGroup transactionGroup = new(
+            doc,
+            transGroupName: $"Group {nameof(PlaceDuctCommand)}");
+
+        transactionGroup.Start();
+
         var ductPoints = elementService.PlaceElementByType(ductPointType, 2);
         if (ductPoints.Count() == 0)
         {
@@ -85,6 +95,8 @@ internal class PlaceDuctCommand : IExternalCommand
             levelId: level.Id,
             startPoint: start,
             endPoint: end);
+
+        var allNewElements = new List<Element>() { mainDuct };
 
         var mainLine = (mainDuct.Location as LocationCurve)!.Curve;
         var mainCenter = mainLine.Evaluate(0.5, true);
@@ -110,14 +122,42 @@ internal class PlaceDuctCommand : IExternalCommand
                 startPoint: connectPoint,
                 endPoint: roomCenter);
 
+            allNewElements.Add(newDuct);
+
             Connector connector = newDuct.ConnectorManager.Connectors.Cast<Connector>()
                 .First(x => x.Origin.IsAlmostEqualTo(connectPoint));
 
-            doc.Create.NewTakeoffFitting(connector, mainDuct);
+            var newFitting = doc.Create.NewTakeoffFitting(connector, mainDuct);
+
+            allNewElements.Add(newFitting);
         }
 
+        var newPlan = viewPlanService.CreateViewPlan(
+            name: $"New plan {Guid.NewGuid()}",
+            elements: allNewElements,
+            filterParameterName: PLAN_PARAMETER_NAME);
+
+        doc.Regenerate();
+        try
+        {
+            viewPlanService.CreateDimensions(newPlan, allNewElements);
+        }
+        catch (Exception ex)
+        {
+        }
+
+        var new3D = viewPlanService.CreateView3D(
+            name: $"New 3d {Guid.NewGuid()}",
+            elements: allNewElements,
+            filterParameterName: VIEW3D_PARAMETER_NAME);
+
         doc.Delete([.. ductPoints.Select(x => x.Id)]);
+
         tr.Commit();
+
+        transactionGroup.Assimilate();
+
+        uidoc.ActiveView = newPlan;
 
         return Result.Succeeded;
     }
