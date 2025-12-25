@@ -1,5 +1,6 @@
 ﻿using Autodesk.Revit.DB;
 using Autodesk.Revit.DB.Events;
+using Autodesk.Revit.DB.Mechanical;
 using Autodesk.Revit.UI;
 using System.Linq;
 
@@ -196,5 +197,13 @@ internal class ElementService
         }
 
         return (width!.Value, height, center);
+    }
+
+    public string GetDuctName(Duct duct)
+    {
+        double l = Math.Round((duct.Location as LocationCurve).Curve.Length * Constants.UNITS_CONVERT, 2);
+        double h = Math.Round(duct.Height * Constants.UNITS_CONVERT, 2);
+        double w = Math.Round(duct.Width * Constants.UNITS_CONVERT, 2);
+        return $"Duct L: {l}; H: {h}; W: {w}";
     }
 }

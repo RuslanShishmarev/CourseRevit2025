@@ -4,7 +4,9 @@ using Autodesk.Revit.DB.Architecture;
 using Autodesk.Revit.DB.Mechanical;
 using Autodesk.Revit.UI;
 
+using CourseRevit2025.FirstProject.Models;
 using CourseRevit2025.FirstProject.Services;
+using CourseRevit2025.FirstProject.Services.Interfaces;
 
 namespace CourseRevit2025.FirstProject.Commands;
 
@@ -14,6 +16,11 @@ internal class PlaceDuctCommand : IExternalCommand
 {
     private const string PLAN_PARAMETER_NAME = "Plugin_ViewPlan";
     private const string VIEW3D_PARAMETER_NAME = "Plugin_View3D";
+    private const string SCHEDULE_PARAMETER_NAME = "Plugin_ViewSchedule";
+    private const string POSITION_PARAM = "Позиция";
+    private const string NAME_PARAM = "Наименование";
+    private const string MARK_PARAM = "Марка";
+    private const string COUNT_PARAM = "Число";
 
     public Result Execute(
         ExternalCommandData commandData,
@@ -24,7 +31,7 @@ internal class PlaceDuctCommand : IExternalCommand
         Document doc = uidoc.Document;
 
         ElementService elementService = new(commandData);
-        ViewPlanService viewPlanService = new(doc);
+        IViewPlanService viewPlanService = new ViewPlanService(doc);
         // get all rooms inner active view (view must be plan)
 
         var rooms = elementService.GetElements(
@@ -101,6 +108,16 @@ internal class PlaceDuctCommand : IExternalCommand
         var mainLine = (mainDuct.Location as LocationCurve)!.Curve;
         var mainCenter = mainLine.Evaluate(0.5, true);
 
+        int startFitPos = 1;
+        int startDuctPos = 2;
+        Dictionary<double, int> ductPositions = new()
+        {
+            { (mainDuct.Location as LocationCurve)!.Curve.Length, startDuctPos },
+        };
+
+        mainDuct.LookupParameter(POSITION_PARAM).Set(startDuctPos.ToString());
+        mainDuct.LookupParameter(NAME_PARAM).Set(elementService.GetDuctName(mainDuct));
+
         // place duct for rooms
         foreach (Room room in rooms)
         {
@@ -122,12 +139,28 @@ internal class PlaceDuctCommand : IExternalCommand
                 startPoint: connectPoint,
                 endPoint: roomCenter);
 
+            double length = connectPoint.DistanceTo(roomCenter);
+
+            if (ductPositions.TryGetValue(length, out int pos))
+            {
+                startDuctPos = pos;
+            }
+            else
+            {
+                startDuctPos++;
+                ductPositions[length] = startDuctPos;
+            }
+            newDuct.LookupParameter(POSITION_PARAM).Set(startDuctPos.ToString());
+            newDuct.LookupParameter(NAME_PARAM).Set(elementService.GetDuctName(newDuct));
+
             allNewElements.Add(newDuct);
 
             Connector connector = newDuct.ConnectorManager.Connectors.Cast<Connector>()
                 .First(x => x.Origin.IsAlmostEqualTo(connectPoint));
 
             var newFitting = doc.Create.NewTakeoffFitting(connector, mainDuct);
+
+            newFitting.LookupParameter(POSITION_PARAM).Set(startFitPos.ToString());
 
             allNewElements.Add(newFitting);
         }
@@ -153,11 +186,35 @@ internal class PlaceDuctCommand : IExternalCommand
 
         doc.Delete([.. ductPoints.Select(x => x.Id)]);
 
+        var schedule = viewPlanService.CreateViewSchedule(
+            fieldNames: 
+            [
+                new ScheduleParameterView(
+                    name: POSITION_PARAM,
+                    isGroup: true),
+                new ScheduleParameterView(
+                    name: NAME_PARAM,
+                    isGroup: false),
+                new ScheduleParameterView(
+                    name: MARK_PARAM,
+                    isGroup: false),
+                new ScheduleParameterView(
+                    name: COUNT_PARAM,
+                    isGroup: false)
+            ],
+            filter: new ScheduleFilterView<string>(PLAN_PARAMETER_NAME, newPlan.Name),
+            name: $"Schedule {Guid.NewGuid()}");
+        
+        foreach (var el in allNewElements)
+        {
+            el.LookupParameter(SCHEDULE_PARAMETER_NAME)?.Set(schedule.Name);
+        }
+
         tr.Commit();
 
         transactionGroup.Assimilate();
 
-        uidoc.ActiveView = newPlan;
+        uidoc.ActiveView = schedule;
 
         return Result.Succeeded;
     }

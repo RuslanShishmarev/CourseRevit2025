@@ -209,6 +209,64 @@ internal class ViewPlanService : IViewPlanService
         }
     }
 
+    public ViewSchedule CreateViewSchedule<T>(
+        IEnumerable<ScheduleParameterView> fieldNames,
+        ScheduleFilterView<T> filter,
+        string name)
+    {
+        var schedule = ViewSchedule.CreateSchedule(_doc, ElementId.InvalidElementId);
+        schedule.Name = name;
+
+        var fields = schedule.Definition.GetSchedulableFields();
+
+        var filterFiled = fields.FirstOrDefault(x => x.GetName(_doc) == filter.Name);
+
+        if (filterFiled != null)
+        {
+            var scheduleFilter = schedule.Definition.AddField(filterFiled);
+            scheduleFilter.IsHidden = true;
+
+            var addedFilter = new ScheduleFilter(scheduleFilter.FieldId, ScheduleFilterType.Equal);
+
+            if (filter.Value is ElementId filterElId)
+            {
+                addedFilter.SetValue(filterElId);
+            }
+            else if (filter.Value is int filterInt)
+            {
+                addedFilter.SetValue(filterInt);
+            }
+            else if (filter.Value is double filterD)
+            {
+                addedFilter.SetValue(filterD);
+            }
+            else if (filter.Value is string filterStr)
+            {
+                addedFilter.SetValue(filterStr);
+            }
+
+            schedule.Definition.AddFilter(addedFilter);
+        }
+
+        foreach (var fieldToAdd in fieldNames)
+        {
+            var field = fields.FirstOrDefault(x => x.GetName(_doc) == fieldToAdd.Name);
+            if (field is  null) continue;
+
+            var scheduleField = schedule.Definition.AddField(field);
+            scheduleField.IsHidden = !fieldToAdd.IsVisible;
+
+            if (fieldToAdd.IsGroup)
+            {
+                var groupField = new ScheduleSortGroupField(scheduleField.FieldId);
+                schedule.Definition.AddSortGroupField(groupField);
+            }
+        }
+        schedule.Definition.IsItemized = false;
+
+        return schedule;
+    }
+
     private Line? GetCurve(MEPCurve el, ViewRevit view)
     {
         var geometry = el.get_Geometry(new Options
